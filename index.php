@@ -83,11 +83,11 @@ foreach ($categorias as $slug => $nombre) {
             $price = $api_p['prices']['sale_price'] ?? $api_p['prices']['price'] ?? '';
             $prendas[$slug][] = [
                 'nombre'              => $api_p['name'],
-                'thumbnail'           => $thumb, // Primera imagen (panel de selección)
-                'imagen'              => $mannequin, // Segunda imagen (maniquí)
+                'thumbnail'           => $thumb,
+                'imagen'              => $mannequin,
                 'nombre_categoria'    => $slug,
                 'contenedor_categoria'=> $slug,
-                'titulo_categoria'    => $nombre,
+                'titulo_categoria'    => $categorias[$slug],
                 'descripcion'         => '',
                 'precio'              => $price,
                 'sku'                 => $api_p['sku'],
@@ -99,11 +99,9 @@ foreach ($categorias as $slug => $nombre) {
 
 // Para la barra lateral, tomamos la primera prenda de cada categoría
 $prenda_sidebar = [];
-$categoriasEnUso = [];
 foreach ($categorias as $slug => $nombre) {
     if (!empty($prendas[$slug])) {
         $prenda_sidebar[$slug] = $prendas[$slug][0];
-        $categoriasEnUso[] = $slug;
     }
 }
 
@@ -141,9 +139,9 @@ foreach ($categorias as $slug => $nombre) {
       display: flex !important;
       align-items: center !important;
       cursor: pointer !important;
-      padding: 1px 4px !important; /* Más pequeño */
+      padding: 1px 4px !important;
       margin-bottom: 6px !important;
-      font-size: 0.7rem !important; /* Más pequeño */
+      font-size: 0.7rem !important;
     }
     .btn_quitar .eYoBEa {
       margin-left: 2px !important;
@@ -178,7 +176,7 @@ foreach ($categorias as $slug => $nombre) {
       border-radius: 4px !important;
     }
     /* Posiciones de cada categoría en el maniquí */
-    #div-pantalones { position: absolute !important; top: 31% !important; left: 90 !important; width: 100% !important; z-index: 5 !important; }
+    #div-pantalones { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 5 !important; }
     #div-camisas { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 6 !important; }
     #div-sacos { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 7 !important; }
     #div-zapatos { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 4 !important; }
@@ -187,19 +185,7 @@ foreach ($categorias as $slug => $nombre) {
     #div-accesorios { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 10 !important; }
     #div-calcetines { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 3 !important; }
     #div-sombreros { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 11 !important; }
-    #div-bano {
-      position: absolute !important;
-      top: 25% !important; /* Ajustado para alinearse con la cintura */
-      left: 50% !important; /* Centrado horizontalmente */
-      transform: translateX(-50%) !important; /* Ajuste para centrar la imagen */
-      width: 100% !important;
-      max-width: 300px !important; /* Limita el ancho para que no exceda al modelo */
-      z-index: 5 !important;
-    }
-    #div-bano img {
-      width: 100% !important; /* Asegura que la imagen se ajuste al contenedor */
-      height: auto !important;
-    }
+  
     #menu {
       min-width: 250px !important;
       padding: 10px !important;
@@ -211,15 +197,15 @@ foreach ($categorias as $slug => $nombre) {
     }
     #quitar-global {
       position: absolute !important;
-      bottom: 10px !important; /* Justo debajo del traje de baño */
+      bottom: 10px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
       z-index: 1000 !important;
       background-color: rgba(255,255,255,0.8) !important;
-      border-radius: 3px !important; /* Más pequeño */
-      padding: 2px 6px !important; /* Más pequeño */
+      border-radius: 3px !important;
+      padding: 2px 6px !important;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
-      font-size: 0.7rem !important; /* Más pequeño */
+      font-size: 0.7rem !important;
     }
     #resumen-compra {
       position: fixed !important;
@@ -254,7 +240,7 @@ foreach ($categorias as $slug => $nombre) {
     <div class="TaAFo">
       <div id="probador" class="hIrAZy" style="position: relative;">
         <!-- Loader -->
-        <div id="loader" class="position-absolute top-50 start-50 translate-middle">
+        <div id="loader" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
           <div class="spinner-border"></div>
         </div>
         <!-- Maniquí principal -->
@@ -454,6 +440,8 @@ foreach ($categorias as $slug => $nombre) {
   <div id="resumen-total" class="resumen-total">Total: $0</div>
 </div>
 
+<!-- (El formulario original se ha eliminado ya que ahora se usa AJAX) -->
+
 <script>
 // Variables globales para manejo de selección
 document.addEventListener('DOMContentLoaded', function() {
@@ -461,50 +449,66 @@ document.addEventListener('DOMContentLoaded', function() {
   window.selectedCount = 0;
   window.selectedPrice = 0;
   window.lastSelectedCategory = null;
-
-  // Manejo del botón "Shop Look"
+  
+  // Botón "Shop Look" con envío secuencial de productos
   const shopLookButton = document.getElementById('shopLookButton');
-  if (shopLookButton) {
-    shopLookButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      document.getElementById('loader').style.display = 'block';
-      const selectedIds = Object.values(window.selectedItems).map(item => item.id);
-      if (selectedIds.length > 0) {
-        let cartUrl = 'https://sartoriacielomilano.com/?';
-        selectedIds.forEach((id, index) => {
-          cartUrl += `add-to-cart[${index}]=${id}&quantity[${index}]=1&`;
+  shopLookButton.addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    const productos = Object.values(window.selectedItems);
+    if (productos.length === 0) {
+      alert('Por favor, selecciona al menos un producto.');
+      return;
+    }
+    
+    document.getElementById('loader').style.display = 'block';
+    
+    try {
+      for (let item of productos) {
+        const response = await fetch("https://sartoriacielomilano.com/?wc-ajax=add_to_cart", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            product_id: item.id,
+            quantity: 1
+          })
         });
-        cartUrl += 'redirect_to=' + encodeURIComponent('https://sartoriacielomilano.com/carrito/');
-        window.location.href = cartUrl;
-      } else {
-        document.getElementById('loader').style.display = 'none';
-        alert('Por favor, selecciona al menos un producto.');
+        
+        if (!response.ok) {
+          throw new Error("Error al agregar el producto con ID: " + item.id);
+        }
+        
+        await response.json();
       }
-    });
-  }
+      window.location.href = "https://sartoriacielomilano.com/carrito/";
+    } catch (error) {
+      document.getElementById('loader').style.display = 'none';
+      console.error('Error al agregar productos al carrito:', error);
+      alert('Hubo un error al agregar los productos al carrito. Consulta la consola para más detalles.');
+    }
+  });
+  
   document.getElementById('loader').style.display = 'none';
 });
 
 // Función para cambiar la prenda seleccionada en el maniquí
 function cambiarPrenda(categoria, contenedor, imagen, boton, sku, id, precio, nombre) {
   window.lastSelectedCategory = categoria;
-  // Mostramos el contenedor de la prenda
   document.getElementById(`div-${categoria}`).style.display = "block";
   const container = document.getElementById(`contenedor-${contenedor}`);
   if (container && container.querySelector('img')) {
     container.querySelector('img').src = imagen;
   }
-  // Actualizamos estado de botones
   const buttons = document.querySelectorAll(`#${categoria} [id^="B"]`);
   buttons.forEach(btn => {
     if (btn.id === boton) {
       btn.setAttribute("aria-pressed", "true");
       btn.classList.add("seleccionado");
       window.selectedItems[categoria] = {
-        id, 
-        sku, 
-        precio: parseFloat(precio) || 0, 
-        nombre: nombre, 
+        id,
+        sku,
+        precio: parseFloat(precio) || 0,
+        nombre: nombre,
         categoria: categoria
       };
     } else {
@@ -512,9 +516,7 @@ function cambiarPrenda(categoria, contenedor, imagen, boton, sku, id, precio, no
       btn.classList.remove("seleccionado");
     }
   });
-  // Mostramos precio en el botón de la barra lateral
   document.getElementById(`total-${categoria}`).textContent = `$${parseFloat(precio) || 0}`;
-  // Actualizamos contadores y resumen
   actualizarContador();
   actualizarResumenCompra();
 }
@@ -523,15 +525,12 @@ function cambiarPrenda(categoria, contenedor, imagen, boton, sku, id, precio, no
 function quitarPrenda(categoria) {
   const divPrenda = document.getElementById(`div-${categoria}`);
   if (divPrenda) divPrenda.style.display = "none";
-  // Quitamos selección de los botones
   const buttons = document.querySelectorAll(`#${categoria} [id^="B"]`);
   buttons.forEach(btn => {
     btn.setAttribute("aria-pressed", "false");
     btn.classList.remove("seleccionado");
   });
-  // Removemos del array de items seleccionados
   delete window.selectedItems[categoria];
-  // Reseteamos precio en la barra lateral
   document.getElementById(`total-${categoria}`).textContent = '$0';
   actualizarContador();
   actualizarResumenCompra();
@@ -539,8 +538,7 @@ function quitarPrenda(categoria) {
 
 // Función para quitar TODAS las prendas seleccionadas
 function quitarPrendaSeleccionada() {
-  const categories = Object.keys(window.selectedItems);
-  categories.forEach(function(category) {
+  Object.keys(window.selectedItems).forEach(function(category) {
     quitarPrenda(category);
   });
   window.lastSelectedCategory = null;
@@ -595,9 +593,7 @@ function cambiarModelo(modelo) {
   const modelContainer = document.getElementById('contenedor-modelos');
   if (modelContainer) {
     const imgs = modelContainer.querySelectorAll('img');
-    // La primera imagen es el cuerpo
     if (imgs[0]) imgs[0].src = `modelos/${modelo}.avif?v=<?= $version ?>`;
-    // La segunda imagen son las manos
     if (imgs[1]) imgs[1].src = `modelos/manos/manos-${modelo}.avif?v=<?= $version ?>`;
   }
 }
