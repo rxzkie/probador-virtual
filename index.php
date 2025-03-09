@@ -66,7 +66,7 @@ foreach ($categorias as $slug => $nombre) {
     $prendas[$slug] = [];
     foreach ($api_categorias[$slug] as $api_p) {
         $thumb = isset($api_p['images'][0]['src']) ? $api_p['images'][0]['src'] : '';
-        $mannequin = isset($api_p['images'][1]['src']) ? $api_p['images'][1]['src'] : $thumb;
+        $mannequin = isset($api_p['images'][0]['src']) ? $api_p['images'][0]['src'] : $thumb;
         $price = $api_p['prices']['sale_price'] ?? $api_p['prices']['price'] ?? '';
 
         $prendas[$slug][] = [
@@ -117,19 +117,109 @@ foreach ($categorias as $slug => $nombre) {
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    .nomobile { display: inline; }
-    @media (max-width: 768px) { .nomobile { display: none; } }
-    .btn_quitar { background: none; border: none; display: flex; align-items: center; cursor: pointer; padding: 5px 10px; margin-bottom: 10px; }
-    .btn_quitar .eYoBEa { margin-left: 5px; }
-    .womN { margin-bottom: 10px; }
-    .contenedor-modelo img { max-width: 100%; height: auto; }
-    .manos { position: absolute; top: 0; left: 0; z-index: 10; }
-    .shop-look-btn { background-color: #000; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; }
-    .shop-look-btn:hover { background-color: #333; color: #fff; }
-    .seleccionado { border: 2px solid #007bff; border-radius: 4px; }
-    #div-bano { position: absolute; top: 31%; z-index: 5; }
-    #menu { min-width: 250px; padding: 10px; }
-    .total-categoria { margin-left: 10px; font-size: 0.9em; color: #555; }
+    .nomobile {
+      display: inline;
+    }
+    @media (max-width: 768px) {
+      .nomobile {
+        display: none;
+      }
+    }
+    .btn_quitar {
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding: 5px 10px;
+      margin-bottom: 10px;
+    }
+    .btn_quitar .eYoBEa {
+      margin-left: 5px;
+    }
+    .womN {
+      margin-bottom: 10px;
+    }
+    .contenedor-modelo img {
+      max-width: 100%;
+      height: auto;
+    }
+    .manos {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+    }
+    .shop-look-btn {
+      background-color: #000;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .shop-look-btn:hover {
+      background-color: #333;
+      color: #fff;
+    }
+    .seleccionado {
+      border: 2px solid #007bff;
+      border-radius: 4px;
+    }
+    #div-pantalones { position: absolute; top: 31%; left: 0; width: 100%; z-index: 5; }
+    #div-camisas { position: absolute; top: 31%; left: 0; width: 100%; z-index: 6; }
+    #div-sacos { position: absolute; top: 31%; left: 0; width: 100%; z-index: 7; }
+    #div-zapatos { position: absolute; top: 31%; left: 0; width: 100%; z-index: 4; }
+    #div-corbatas { position: absolute; top: 31%; left: 0; width: 100%; z-index: 8; }
+    #div-cinturones { position: absolute; top: 31%; left: 0; width: 100%; z-index: 9; }
+    #div-accesorios { position: absolute; top: 31%; left: 0; width: 100%; z-index: 10; }
+    #div-calcetines { position: absolute; top: 31%; left: 0; width: 100%; z-index: 3; }
+    #div-sombreros { position: absolute; top: 31%; left: 0; width: 100%; z-index: 11; }
+    #div-bano { position: absolute; top: 31%; left: 0; width: 100%; z-index: 5; }
+    #menu {
+      min-width: 250px;
+      padding: 10px;
+    }
+    .total-categoria {
+      margin-left: 10px;
+      font-size: 0.9em;
+      color: #555;
+    }
+    #quitar-global {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 1000;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      padding: 8px 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #resumen-compra {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 999;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      max-width: 300px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .resumen-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+    .resumen-total {
+      border-top: 1px solid #ddd;
+      margin-top: 5px;
+      padding-top: 5px;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -217,16 +307,6 @@ foreach ($categorias as $slug => $nombre) {
           <?php if (!empty($prendas[$slug])): ?>
             <div id="<?= $slug ?>" class="CCGaA invisibles">
               <div class="korxed" style="opacity: 1">
-                <div class="womN">
-                  <button id="btn_quitar_<?= $slug ?>" class="btn_quitar" onclick="quitarPrenda('<?= $slug ?>');seleccionarBoton(this.id);">
-                    <svg width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" class="sc-fecFrY iyEpvL">
-                      <circle cx="9" cy="9" r="8.4" stroke="currentColor" stroke-width="1.2"></circle>
-                      <path d="M14.7856 3.21436 3.21411 14.7859" stroke="currentColor" stroke-width="1.2" stroke-linecap="square"></path>
-                    </svg>
-                    <span class="eYoBEa"><span class="nomobile">Quitar</span></span>
-                  </button>
-                </div>
-                
                 <div class="fHoayM">
                   <div class="cpezMr" style="transform: none">
                     <?php foreach ($prendas[$slug] as $prenda): ?>
@@ -235,7 +315,9 @@ foreach ($categorias as $slug => $nombre) {
                         data-sku="<?= $prenda['sku'] ?>"
                         data-id="<?= $prenda['id'] ?>"
                         data-precio="<?= $prenda['precio'] ?>"
-                        onclick="cambiarPrenda('<?= $slug ?>','<?= $prenda['contenedor_categoria'] ?>','<?= $prenda['imagen'] ?>','<?= $botonId ?>','<?= $prenda['sku'] ?>','<?= $prenda['id'] ?>','<?= $prenda['precio'] ?>')">
+                        data-nombre="<?= $prenda['nombre'] ?>"
+                        data-categoria="<?= $slug ?>"
+                        onclick="cambiarPrenda('<?= $slug ?>','<?= $prenda['contenedor_categoria'] ?>','<?= $prenda['imagen'] ?>','<?= $botonId ?>','<?= $prenda['sku'] ?>','<?= $prenda['id'] ?>','<?= $prenda['precio'] ?>','<?= $prenda['nombre'] ?>')">
                         <div class="jrkhdw">
                           <div class="cNOKjb" style="opacity: 1; transform: none">
                             <figure class="nPPeX" style="transform: none">
@@ -314,11 +396,27 @@ foreach ($categorias as $slug => $nombre) {
   </div>
 </div>
 
+<!-- Botón único para quitar todas las prendas seleccionadas -->
+<button id="quitar-global" class="btn_quitar" onclick="quitarPrendaSeleccionada();">
+  <svg width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg" class="sc-fecFrY iyEpvL">
+    <circle cx="9" cy="9" r="8.4" stroke="currentColor" stroke-width="1.2"></circle>
+    <path d="M14.7856 3.21436 3.21411 14.7859" stroke="currentColor" stroke-width="1.2" stroke-linecap="square"></path>
+  </svg>
+  <span class="eYoBEa">Quitar prenda</span>
+</button>
+
+<div id="resumen-compra">
+  <h5>Resumen de compra</h5>
+  <div id="resumen-items"></div>
+  <div id="resumen-total" class="resumen-total">Total: $0</div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   window.selectedItems = {};
   window.selectedCount = 0;
   window.selectedPrice = 0;
+  window.lastSelectedCategory = null;
 
   const shopLookButton = document.getElementById('shopLookButton');
   if (shopLookButton) {
@@ -328,13 +426,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const selectedIds = Object.values(window.selectedItems).map(item => item.id);
       if (selectedIds.length > 0) {
-        const url = `https://sartoriacielomilano.com/?add-to-cart=${selectedIds.join(',')}&quantity=1`;
-        fetch(url, { method: 'GET', credentials: 'same-origin' })
-          .then(() => { window.location.href = 'https://sartoriacielomilano.com/carrito/'; })
-          .catch(error => {
-            document.getElementById('loader').style.display = 'none';
-            alert('Error al agregar los productos al carrito.');
-          });
+        let cartUrl = 'https://sartoriacielomilano.com/?';
+        selectedIds.forEach((id, index) => {
+          cartUrl += `add-to-cart[${index}]=${id}&quantity[${index}]=1&`;
+        });
+        cartUrl += 'redirect_to=' + encodeURIComponent('https://sartoriacielomilano.com/carrito/');
+        window.location.href = cartUrl;
       } else {
         document.getElementById('loader').style.display = 'none';
         alert('Por favor, selecciona al menos un producto.');
@@ -345,7 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('loader').style.display = 'none';
 });
 
-function cambiarPrenda(categoria, contenedor, imagen, boton, sku, id, precio) {
+function cambiarPrenda(categoria, contenedor, imagen, boton, sku, id, precio, nombre) {
+  window.lastSelectedCategory = categoria;
+  
   document.getElementById(`div-${categoria}`).style.display = "block";
   const container = document.getElementById(`contenedor-${contenedor}`);
   if (container && container.querySelector('img')) {
@@ -357,15 +456,22 @@ function cambiarPrenda(categoria, contenedor, imagen, boton, sku, id, precio) {
     if (btn.id === boton) {
       btn.setAttribute("aria-pressed", "true");
       btn.classList.add("seleccionado");
-      window.selectedItems[categoria] = { id, sku, precio: parseInt(precio) || 0 };
+      window.selectedItems[categoria] = { 
+        id, 
+        sku, 
+        precio: parseFloat(precio) || 0,
+        nombre: nombre,
+        categoria: categoria
+      };
     } else {
       btn.setAttribute("aria-pressed", "false");
       btn.classList.remove("seleccionado");
     }
   });
 
-  document.getElementById(`total-${categoria}`).textContent = `$${parseInt(precio) || 0}`;
+  document.getElementById(`total-${categoria}`).textContent = `$${parseFloat(precio) || 0}`;
   actualizarContador();
+  actualizarResumenCompra();
 }
 
 function quitarPrenda(categoria) {
@@ -381,12 +487,45 @@ function quitarPrenda(categoria) {
   delete window.selectedItems[categoria];
   document.getElementById(`total-${categoria}`).textContent = '$0';
   actualizarContador();
+  actualizarResumenCompra();
+}
+
+function quitarPrendaSeleccionada() {
+  // Elimina todas las prendas seleccionadas
+  const categories = Object.keys(window.selectedItems);
+  categories.forEach(function(category) {
+    quitarPrenda(category);
+  });
+  window.lastSelectedCategory = null;
 }
 
 function actualizarContador() {
   window.selectedCount = Object.keys(window.selectedItems).length;
-  window.selectedPrice = Object.values(window.selectedItems).reduce((total, item) => total + item.precio, 0);
+  window.selectedPrice = Object.values(window.selectedItems).reduce((total, item) => total + parseFloat(item.precio || 0), 0);
   document.getElementById('itemCounter').textContent = `Items: ${window.selectedCount} | Total: $${window.selectedPrice}`;
+}
+
+function actualizarResumenCompra() {
+  const resumenItems = document.getElementById('resumen-items');
+  const resumenTotal = document.getElementById('resumen-total');
+  
+  resumenItems.innerHTML = '';
+  
+  let total = 0;
+  Object.values(window.selectedItems).forEach(item => {
+    const precio = parseFloat(item.precio) || 0;
+    total += precio;
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'resumen-item';
+    itemDiv.innerHTML = `
+      <span>${item.nombre}</span>
+      <span>$${precio}</span>
+    `;
+    resumenItems.appendChild(itemDiv);
+  });
+  
+  resumenTotal.textContent = `Total: $${total}`;
 }
 
 function seleccionarBoton(id) {

@@ -302,12 +302,7 @@ transition-timing-function: ease-in;
     /* font-size: 18px; */
 }
 
-@media (min-width: 1024px) {
-    .btn_quitar::after {
-        content: "Quitar Saco";
-        /* font-size: 14px; */
-    }
-}
+
 .hllURJ{width:100%;overflow-x:auto;scrollbar-width:none;}
 @media (min-width: 1024px){
 .hllURJ{overflow-y:unset;}
