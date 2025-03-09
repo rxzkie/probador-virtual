@@ -46,6 +46,31 @@ foreach ($api_products as $product) {
     }
 }
 
+// Definimos el orden deseado de las categorías
+// Orden solicitado: camisas, polera, pantalon, bermuda, traje de baño, sacos, zapatos, trajes
+$orden_categorias = ['camisas', 'polera', 'pantalon', 'bermuda', 'traje-de-bano', 'sacos', 'zapatos', 'trajes'];
+
+// Reordenamos las categorías: primero las que están en $orden_categorias, luego las demás
+$categorias_ordenadas = [];
+$restantes = [];
+
+// Primero, añadimos las categorías que están en el orden especificado
+foreach ($orden_categorias as $slug) {
+    if (isset($categorias[$slug])) {
+        $categorias_ordenadas[$slug] = $categorias[$slug];
+    }
+}
+
+// Luego, añadimos las categorías que no estaban en $orden_categorias
+foreach ($categorias as $slug => $nombre) {
+    if (!in_array($slug, $orden_categorias)) {
+        $restantes[$slug] = $nombre;
+    }
+}
+
+// Fusionamos las categorías ordenadas con las restantes
+$categorias = array_merge($categorias_ordenadas, $restantes);
+
 // Agrupamos los productos de la API por categoría
 $api_categorias = [];
 foreach ($categorias as $slug => $nombre) {
@@ -176,15 +201,22 @@ foreach ($categorias as $slug => $nombre) {
       border-radius: 4px !important;
     }
     /* Posiciones de cada categoría en el maniquí */
-    #div-pantalones { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 5 !important; }
-    #div-camisas { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 6 !important; }
-    #div-sacos { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 7 !important; }
-    #div-zapatos { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 4 !important; }
-    #div-corbatas { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 8 !important; }
-    #div-cinturones { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 9 !important; }
-    #div-accesorios { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 10 !important; }
-    #div-calcetines { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 3 !important; }
-    #div-sombreros { position: absolute !important; top: 31% !important; left: 0 !important; width: 100% !important; z-index: 11 !important; }
+    <?php foreach ($categorias as $slug => $nombre): ?>
+      #div-<?= $slug ?> { 
+        position: absolute !important; 
+        top: 31% !important; 
+        left: 0 !important; 
+        width: 100% !important; 
+        z-index: <?php 
+          // Asignamos z-index según la categoría para evitar solapamientos
+          if ($slug == 'zapatos') echo '4';
+          elseif ($slug == 'pantalon' || $slug == 'bermuda' || $slug == 'traje-de-bano') echo '5';
+          elseif ($slug == 'camisas' || $slug == 'polera') echo '6';
+          elseif ($slug == 'sacos' || $slug == 'trajes') echo '7';
+          else echo '8'; // Para categorías adicionales
+        ?> !important; 
+      }
+    <?php endforeach; ?>
   
     #menu {
       min-width: 250px !important;
@@ -274,25 +306,27 @@ foreach ($categorias as $slug => $nombre) {
         <div id="menu" class="iQNMuV">
           <div class="fHoayM">
             <div class="eRxhqm" style="opacity: 1">
-              <?php foreach ($prenda_sidebar as $key => $prenda): ?>
-                <button class="jJlTfc" onclick="habilitar('<?= $key ?>','<?= $prenda['contenedor_categoria'] ?>');">
-                  <div class="dnzqbB">
-                    <div class="kwQXt" style="opacity: 1; transform: none">
-                      <figure class="nPPeX" style="transform: none">
-                        <picture class="gHfhyG">
-                          <img 
-                            src="<?= $prenda['thumbnail'] ?>"
-                            onerror="this.onerror=null; this.src='productos/<?= $key ?>/miniaturas/tn-<?= $key ?>.avif?v=<?= $version ?>';"
-                          />
-                        </picture>
-                      </figure>
+              <?php foreach ($categorias as $slug => $nombre): ?>
+                <?php if (isset($prenda_sidebar[$slug])): ?>
+                  <button class="jJlTfc" onclick="habilitar('<?= $slug ?>','<?= $prenda_sidebar[$slug]['contenedor_categoria'] ?>');">
+                    <div class="dnzqbB">
+                      <div class="kwQXt" style="opacity: 1; transform: none">
+                        <figure class="nPPeX" style="transform: none">
+                          <picture class="gHfhyG">
+                            <img 
+                              src="<?= $prenda_sidebar[$slug]['thumbnail'] ?>"
+                              onerror="this.onerror=null; this.src='productos/<?= $slug ?>/miniaturas/tn-<?= $slug ?>.avif?v=<?= $version ?>';"
+                            />
+                          </picture>
+                        </figure>
+                      </div>
                     </div>
-                  </div>
-                  <div class="cpPtLA" style="opacity: 1; transform: none">
-                    <span class="fsRkrk"><?= $prenda['titulo_categoria'] ?></span>
-                    <span id="total-<?= $key ?>" class="total-categoria">$0</span>
-                  </div>
-                </button>
+                    <div class="cpPtLA" style="opacity: 1; transform: none">
+                      <span class="fsRkrk"><?= $prenda_sidebar[$slug]['titulo_categoria'] ?></span>
+                      <span id="total-<?= $slug ?>" class="total-categoria">$0</span>
+                    </div>
+                  </button>
+                <?php endif; ?>
               <?php endforeach; ?>
               <!-- Botón para cambiar el tono de piel -->
               <button class="jJlTfc" onclick="mostrarModelos();">
@@ -312,11 +346,6 @@ foreach ($categorias as $slug => $nombre) {
                 </div>
               </button>
             </div>
-          </div>
-          <!-- Contador y botón "Shop Look" -->
-          <div style="margin-top: 20px; text-align: center;">
-            <span id="itemCounter" style="font-weight: bold;">Items: 0 | Total: $0</span>
-            <a href="#" id="shopLookButton" class="shop-look-btn" style="margin-left: 10px;">Shop Look</a>
           </div>
         </div>
 
@@ -438,9 +467,11 @@ foreach ($categorias as $slug => $nombre) {
   <h5>Resumen de compra</h5>
   <div id="resumen-items"></div>
   <div id="resumen-total" class="resumen-total">Total: $0</div>
+  <!-- Solo el botón Shop Look, sin mostrar Items/Total -->
+  <div style="margin-top: 10px; text-align: right;">
+    <a href="#" id="shopLookButton" class="shop-look-btn">Shop Look</a>
+  </div>
 </div>
-
-<!-- (El formulario original se ha eliminado ya que ahora se usa AJAX) -->
 
 <script>
 // Variables globales para manejo de selección
@@ -549,7 +580,6 @@ function actualizarContador() {
   window.selectedCount = Object.keys(window.selectedItems).length;
   window.selectedPrice = Object.values(window.selectedItems)
     .reduce((total, item) => total + parseFloat(item.precio || 0), 0);
-  document.getElementById('itemCounter').textContent = `Items: ${window.selectedCount} | Total: $${window.selectedPrice}`;
 }
 
 // Actualiza el resumen de compra en el recuadro fijo
